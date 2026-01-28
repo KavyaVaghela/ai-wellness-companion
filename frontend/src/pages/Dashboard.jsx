@@ -3,7 +3,7 @@ import AuthContext from '../context/AuthContext';
 import { Activity, Moon, Droplets, Smile, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../config'; // Assuming API_URL is defined in a config file
+import API_URL from '../config'; // Assuming API_URL is defined in a config file
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
