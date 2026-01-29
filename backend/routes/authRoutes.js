@@ -14,7 +14,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { name, email, password, age, gender } = req.body;
+    const { name, email, password, age, gender, profession, emergencyContact } = req.body;
 
     try {
         const userExists = await User.findOne({ email });
@@ -28,7 +28,12 @@ router.post('/register', async (req, res) => {
             email,
             password,
             age,
-            gender
+            email,
+            password,
+            age,
+            gender,
+            profession,
+            emergencyContact
         });
 
         if (user) {

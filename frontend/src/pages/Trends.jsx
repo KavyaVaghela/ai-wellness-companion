@@ -60,8 +60,36 @@ const Trends = () => {
                             <div className="w-2 h-2 mt-1.5 rounded-full bg-red-500"></div>
                             <span>High Flu cases reported in <strong>Mumbai</strong> region.</span>
                         </li>
+                        <li className="flex items-start gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg text-sm">
+                            <div className="w-2 h-2 mt-1.5 rounded-full bg-orange-500"></div>
+                            <span>Heatwave advisory for <strong>Delhi</strong>. Stay hydrated.</span>
+                        </li>
                     </ul>
                 </div>
+            </div>
+
+            {/* Lifestyle Snapshot (Mock Data) */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="font-semibold text-gray-700 mb-6">Community Lifestyle Snapshot</h3>
+                <div className="grid grid-cols-3 gap-4 h-32 items-end justify-items-center">
+                    <div className="w-16 bg-blue-100 rounded-t-xl relative group h-3/4 flex flex-col justify-end">
+                        <div className="text-center mb-2 font-bold text-blue-800">7.2h</div>
+                        <div className="text-xs text-center text-gray-500 -mb-6">Avg Sleep</div>
+                    </div>
+                    <div className="w-16 bg-teal-100 rounded-t-xl relative group h-2/3 flex flex-col justify-end">
+                        <div className="text-center mb-2 font-bold text-teal-800">2.1L</div>
+                        <div className="text-xs text-center text-gray-500 -mb-6">Avg Water</div>
+                    </div>
+                    <div className="w-16 bg-purple-100 rounded-t-xl relative group h-1/2 flex flex-col justify-end">
+                        <div className="text-center mb-2 font-bold text-purple-800">45%</div>
+                        <div className="text-xs text-center text-gray-500 -mb-6">Exercise</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="text-center pt-8 pb-4 text-xs text-gray-400">
+                <p>🛡️ Privacy First: All trend data is aggregated and completely anonymized.</p>
+                <p>We do not share individual health records with any third party.</p>
             </div>
         </div>
     );

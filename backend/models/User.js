@@ -7,6 +7,13 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     age: { type: Number },
     gender: { type: String },
+    profession: { type: String },
+    emergencyContact: {
+        name: { type: String },
+        email: { type: String },
+        relationship: { type: String },
+        phone: { type: String }
+    },
     healthGoals: { type: String }, // e.g., "Lose weight", "Sleep better"
 }, { timestamps: true });
 

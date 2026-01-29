@@ -9,6 +9,10 @@ const Signup = () => {
     const [password, setPassword] = useState('');
     const [age, setAge] = useState('');
     const [gender, setGender] = useState('Male');
+    const [profession, setProfession] = useState('');
+    const [emergencyName, setEmergencyName] = useState('');
+    const [emergencyPhone, setEmergencyPhone] = useState('');
+    const [emergencyRelation, setEmergencyRelation] = useState('');
 
     const [error, setError] = useState('');
 
@@ -19,7 +23,14 @@ const Signup = () => {
         e.preventDefault();
         setError('');
 
-        const res = await register({ name, email, password, age, gender });
+        const res = await register({
+            name, email, password, age, gender, profession,
+            emergencyContact: {
+                name: emergencyName,
+                phone: emergencyPhone,
+                relationship: emergencyRelation
+            }
+        });
         if (res.success) {
             navigate('/dashboard');
         } else {
@@ -107,6 +118,55 @@ const Signup = () => {
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">Profession</label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                            placeholder="e.g. Software Engineer"
+                            value={profession}
+                            onChange={(e) => setProfession(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-4 mt-4">
+                        <h3 className="text-gray-800 font-semibold mb-3">Emergency Contact</h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-gray-700 text-sm font-medium mb-1">Contact Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                                    placeholder="e.g. Jane Doe"
+                                    value={emergencyName}
+                                    onChange={(e) => setEmergencyName(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Phone</label>
+                                    <input
+                                        type="tel"
+                                        className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                                        placeholder="123-456-7890"
+                                        value={emergencyPhone}
+                                        onChange={(e) => setEmergencyPhone(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-gray-700 text-sm font-medium mb-1">Relation</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+                                        placeholder="e.g. Mother"
+                                        value={emergencyRelation}
+                                        onChange={(e) => setEmergencyRelation(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 

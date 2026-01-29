@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from 'react';
 import AuthContext from '../context/AuthContext';
-import { Activity, Moon, Droplets, Smile, ArrowRight } from 'lucide-react';
+import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import API_URL from '../config'; // Assuming API_URL is defined in a config file
+import API_URL from '../config';
+import { heartRateSimulator } from '../services/HeartRateSimulator';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
@@ -13,6 +14,21 @@ const Dashboard = () => {
         steps: 0,
         mood: 'Neutral'
     });
+
+    // Heart Rate State
+    const [heartRate, setHeartRate] = useState({ bpm: '--', status: 'Normal' });
+
+    // Simulator Effect
+    useEffect(() => {
+        heartRateSimulator.start();
+        const unsubscribe = heartRateSimulator.subscribe((data) => {
+            setHeartRate({ bpm: data.bpm, status: data.status });
+        });
+        return () => {
+            unsubscribe();
+            heartRateSimulator.stop();
+        };
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -57,6 +73,40 @@ const Dashboard = () => {
                 </Link>
             </div>
 
+            {/* Live Heart Rate Monitor */}
+            <div className={`p-6 rounded-2xl shadow-lg border-2 transition-all duration-500 ${heartRate.status === 'Alert' ? 'bg-red-50 border-red-500' : 'bg-white border-transparent'}`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
+                        <Activity className={heartRate.status === 'Alert' ? 'text-red-500 animate-pulse' : 'text-teal-600'} />
+                        Live Heart Rate
+                    </h2>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${heartRate.status === 'Alert' ? 'bg-red-100 text-red-600 animate-bounce' : 'bg-teal-100 text-teal-700'}`}>
+                        {heartRate.status}
+                    </span>
+                </div>
+                <div className="flex items-center gap-6">
+                    <div className="relative">
+                        <Heart
+                            size={64}
+                            className={`transition-all duration-300 ${heartRate.status === 'Alert' ? 'text-red-500 fill-red-500 animate-ping' : 'text-rose-500 fill-rose-500 animate-pulse'}`}
+                            style={{ animationDuration: `${60 / heartRate.bpm}s` }}
+                        />
+                    </div>
+                    <div>
+                        <p className="text-5xl font-black text-gray-900">{heartRate.bpm}</p>
+                        <p className="text-gray-500 text-sm">Beats Per Minute</p>
+                    </div>
+                    {heartRate.status === 'Alert' && (
+                        <div className="ml-auto text-right">
+                            <p className="text-red-600 font-bold flex items-center gap-1">
+                                <AlertOctagon size={16} /> EMERGENCY ALERT
+                            </p>
+                            <p className="text-xs text-red-400">Notifying contacts...</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
@@ -98,31 +148,38 @@ const Dashboard = () => {
             </div>
 
             {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-2xl font-bold mb-2">Symptom Checker</h3>
-                        <p className="text-teal-100 mb-6 max-w-sm">
-                            Feeling unwell? Describe your symptoms and get instant AI-powered guidance.
-                        </p>
-                        <Link to="/symptom-checker" className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-2 rounded-lg font-semibold hover:bg-teal-50 transition">
-                            Check Symptoms <ArrowRight size={18} />
-                        </Link>
-                    </div>
-                    <Activity className="absolute right-[-20px] bottom-[-20px] text-teal-400 opacity-20" size={140} />
-                </div>
+            {/* Action Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Link to="/symptom-checker" className="col-span-1 bg-teal-600 rounded-2xl p-6 text-white shadow-lg hover:bg-teal-700 transition relative overflow-hidden group">
+                    <h3 className="text-xl font-bold mb-1">Symptom Checker</h3>
+                    <p className="text-teal-100 text-sm mb-4">AI-powered health guidance</p>
+                    <ArrowRight className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0" />
+                    <Activity className="absolute -right-4 -bottom-4 opacity-10" size={100} />
+                </Link>
 
-                <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-2xl font-bold mb-2 text-gray-800">Lifestyle Tracker</h3>
-                        <p className="text-gray-500 mb-6 max-w-sm">
-                            Log your daily habits, sleep, and water intake to keep your wellness score high.
-                        </p>
-                        <Link to="/tracker" className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2 rounded-lg font-semibold hover:bg-gray-700 transition">
-                            Track Today <ArrowRight size={18} />
-                        </Link>
+                <Link to="/questionnaire" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
+                    <div className="bg-indigo-100 w-12 h-12 rounded-xl flex items-center justify-center text-indigo-600 mb-4">
+                        <Clipboard size={24} />
                     </div>
-                </div>
+                    <h3 className="font-bold text-gray-800">Wellness Quiz</h3>
+                    <p className="text-gray-500 text-sm">Detailed health assessment</p>
+                </Link>
+
+                <Link to="/reminders" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
+                    <div className="bg-orange-100 w-12 h-12 rounded-xl flex items-center justify-center text-orange-600 mb-4">
+                        <Bell size={24} />
+                    </div>
+                    <h3 className="font-bold text-gray-800">Reminders</h3>
+                    <p className="text-gray-500 text-sm">Meds & Habits</p>
+                </Link>
+
+                <Link to="/tracker" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
+                    <div className="bg-gray-100 w-12 h-12 rounded-xl flex items-center justify-center text-gray-600 mb-4">
+                        <Activity size={24} />
+                    </div>
+                    <h3 className="font-bold text-gray-800">Log Habits</h3>
+                    <p className="text-gray-500 text-sm">Sleep, Water, Steps</p>
+                </Link>
             </div>
 
             {/* Recommendations */}
