@@ -32,6 +32,21 @@ const Onboarding = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5000000) { // 5MB limit
+                alert("File is too large. Please upload an image under 5MB.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData({ ...formData, profilePic: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleQuestionSelect = (category, value) => {
         setQuestionnaire({ ...questionnaire, [category]: value });
     };
@@ -57,7 +72,7 @@ const Onboarding = () => {
         if (res.success) {
             navigate('/dashboard');
         } else {
-            alert('Failed to save profile. Please try again.');
+            alert(`Failed to save profile: ${res.message || 'Unknown Error'}. Please try again.`);
         }
         setLoading(false);
     };
@@ -68,6 +83,24 @@ const Onboarding = () => {
         <div className="space-y-6 animate-fadeIn">
             <h2 className="text-2xl font-bold text-gray-800">Tell us about yourself</h2>
             <p className="text-gray-500">Help us personalize your experience.</p>
+
+            <div className="flex justify-center mb-6">
+                <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 relative group hover:border-teal-500 transition cursor-pointer">
+                    {formData.profilePic ? (
+                        <img src={formData.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="text-gray-400 group-hover:text-teal-500" size={32} />
+                    )}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                </div>
+                <p className="sr-only">Upload Profile Picture</p>
+            </div>
+            <p className="text-center text-xs text-gray-500 -mt-4">Tap to upload photo</p>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -87,11 +120,6 @@ const Onboarding = () => {
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Profession</label>
                 <input name="profession" type="text" value={formData.profession} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="Software Engineer" />
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture URL (Optional)</label>
-                <input name="profilePic" type="text" value={formData.profilePic} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="https://..." />
             </div>
 
             <button onClick={nextStep} className="w-full bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-teal-700 transition flex justify-center items-center gap-2">
@@ -122,8 +150,8 @@ const Onboarding = () => {
                                     key={choice}
                                     onClick={() => handleQuestionSelect(category, choice)}
                                     className={`p-2 rounded-lg text-sm border transition ${questionnaire[category] === choice
-                                            ? 'bg-teal-100 border-teal-500 text-teal-800 font-bold'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        ? 'bg-teal-100 border-teal-500 text-teal-800 font-bold'
+                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                         }`}
                                 >
                                     {choice}
