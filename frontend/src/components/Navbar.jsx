@@ -1,18 +1,26 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useContext, useState } from 'react';
 import AuthContext from '../context/AuthContext';
 import { HeartPulse, Menu, X, LogOut, User as UserIcon } from 'lucide-react';
-import { useState } from 'react';
 
 const Navbar = () => {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    // Public routes where we might want a different navbar or no navbar links
+    const publicRoutes = ['/login', '/signup', '/'];
+    const isPublicPage = publicRoutes.includes(location.pathname);
+
+    // If on public page and not logged in, show minimal or no links?
+    // User requested: "remove it from there and add only after login/sign up"
+    // Meaning: on login/signup pages, don't show the main app links. 
 
     return (
         <nav className="bg-white shadow-md">
@@ -47,6 +55,12 @@ const Navbar = () => {
                                 </div>
                             </>
                         ) : (
+                            // Use requested: Only show Login/Get Started if NOT already on those pages?
+                            // Or just keep them. User said "Navbar containing dashboard... remove it".
+                            // The current code already hides Dashboard if !user.
+                            // BUT maybe they see empty space or Want to hide "Login/Signup" buttons if they are ON login page?
+                            // Usually it's fine to keep Login/Signup buttons.
+                            // However, if they want to hide the *entire* navbar content except logo on login page:
                             <>
                                 <Link to="/login" className="text-gray-600 hover:text-teal-600 font-medium">Login</Link>
                                 <Link to="/signup" className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
