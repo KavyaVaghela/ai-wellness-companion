@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
+            console.log(`Attempting login to: ${API_URL}/api/auth/login`);
             const { data } = await axios.post(`${API_URL}/api/auth/login`, {
                 email,
                 password,
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('userInfo', JSON.stringify(data));
             return { success: true };
         } catch (error) {
+            console.error("Login Debug Error:", error);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Login failed'
@@ -35,11 +37,13 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         try {
+            console.log(`Attempting register to: ${API_URL}/api/auth/register`);
             const { data } = await axios.post(`${API_URL}/api/auth/register`, userData);
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             return { success: true };
         } catch (error) {
+            console.error("Register Debug Error:", error);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Registration failed'

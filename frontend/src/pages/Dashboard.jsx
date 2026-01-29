@@ -25,8 +25,8 @@ const Dashboard = () => {
                     return;
                 }
 
-                const { data } = await axios.get(`${API_URL} /api/lifestyle`, {
-                    headers: { Authorization: `Bearer ${token} ` }
+                const { data } = await axios.get(`${API_URL}/api/lifestyle`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 });
 
                 if (data && data.length > 0) {
