@@ -8,6 +8,9 @@ const userSchema = new mongoose.Schema({
     age: { type: Number },
     gender: { type: String },
     profession: { type: String },
+    profilePic: { type: String, default: "" },
+    isOnboardingComplete: { type: Boolean, default: false },
+    questionnaireAnswers: { type: Object, default: {} },
     emergencyContact: {
         name: { type: String },
         email: { type: String },

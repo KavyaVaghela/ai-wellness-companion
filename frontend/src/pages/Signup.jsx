@@ -2,21 +2,26 @@ import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Signup = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [age, setAge] = useState('');
-    const [gender, setGender] = useState('Male');
-    const [profession, setProfession] = useState('');
-    const [emergencyName, setEmergencyName] = useState('');
-    const [emergencyPhone, setEmergencyPhone] = useState('');
-    const [emergencyRelation, setEmergencyRelation] = useState('');
+
+    // We removed the huge initial form fields because we moved them to Onboarding
+    // The user flow is: Signup (Name, Email, Pass) -> Onboarding (Profile, Questions, Emergency)
+    // However, the user said "then after sign in it will ask to set app profile". 
+    // So I will simplify Signup to just basic auth, or keep it but I prefer simplifying it 
+    // and letting Onboarding handle the details to avoid duplication. 
+    // BUT the underlying API 'register' expects some fields maybe? 
+    // checking authRoutes... no, it takes whatever is in body. 
+    // I will simplify Signup to Name/Email/Password to make entry easier, 
+    // then Onboarding handles the rest. This matches "modern" flow better.
 
     const [error, setError] = useState('');
 
-    const { register } = useContext(AuthContext);
+    const { register, googleLogin } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -24,15 +29,20 @@ const Signup = () => {
         setError('');
 
         const res = await register({
-            name, email, password, age, gender, profession,
-            emergencyContact: {
-                name: emergencyName,
-                phone: emergencyPhone,
-                relationship: emergencyRelation
-            }
+            name, email, password
         });
         if (res.success) {
-            navigate('/dashboard');
+            // New users always go to onboarding
+            navigate('/onboarding');
+        } else {
+            setError(res.message);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        const res = await googleLogin(credentialResponse);
+        if (res.success) {
+            navigate('/onboarding');
         } else {
             setError(res.message);
         }
@@ -49,6 +59,26 @@ const Signup = () => {
                         {error}
                     </div>
                 )}
+
+                <div className="mb-6 flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError("Google Login Failed")}
+                        theme="filled_blue"
+                        shape="pill"
+                        text="signup_with"
+                        width="300"
+                    />
+                </div>
+
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or sign up with email</span>
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -96,79 +126,7 @@ const Signup = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-gray-700 text-sm font-medium mb-1">Age</label>
-                            <input
-                                type="number"
-                                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                                placeholder="25"
-                                value={age}
-                                onChange={(e) => setAge(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700 text-sm font-medium mb-1">Gender</label>
-                            <select
-                                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition bg-white"
-                                value={gender}
-                                onChange={(e) => setGender(e.target.value)}
-                            >
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">Profession</label>
-                        <input
-                            type="text"
-                            className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                            placeholder="e.g. Software Engineer"
-                            value={profession}
-                            onChange={(e) => setProfession(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-4 mt-4">
-                        <h3 className="text-gray-800 font-semibold mb-3">Emergency Contact</h3>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Contact Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                                    placeholder="e.g. Jane Doe"
-                                    value={emergencyName}
-                                    onChange={(e) => setEmergencyName(e.target.value)}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Phone</label>
-                                    <input
-                                        type="tel"
-                                        className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                                        placeholder="123-456-7890"
-                                        value={emergencyPhone}
-                                        onChange={(e) => setEmergencyPhone(e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-700 text-sm font-medium mb-1">Relation</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                                        placeholder="e.g. Mother"
-                                        value={emergencyRelation}
-                                        onChange={(e) => setEmergencyRelation(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Age/Gender/Profession/Emergency inputs removed - moved to Onboarding.jsx */}
 
                     <button
                         type="submit"

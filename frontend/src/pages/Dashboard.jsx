@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import AuthContext from '../context/AuthContext';
-import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell } from 'lucide-react';
+import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
@@ -14,6 +14,7 @@ const Dashboard = () => {
         steps: 0,
         mood: 'Neutral'
     });
+    const [emergenyLoading, setEmergencyLoading] = useState(false);
 
     // Heart Rate State
     const [heartRate, setHeartRate] = useState({ bpm: '--', status: 'Normal' });
@@ -61,16 +62,61 @@ const Dashboard = () => {
         fetchStats();
     }, []);
 
+    const handleEmergency = async () => {
+        if (!window.confirm("Are you sure you want to trigger an EMERGENCY ALERT? This will notify your emergency contact and emergency services.")) return;
+
+        setEmergencyLoading(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.post(`${API_URL}/api/auth/emergency-alert`, {
+                userId: user._id,
+                type: "SOS_BUTTON",
+                location: { lat: 0, lng: 0 } // Mock location
+            }, {
+                headers: { Authorization: `Bearer ${userInfo?.token}` }
+            });
+            alert("Emergency Alert Sent! Help is on the way.");
+        } catch (error) {
+            alert("Failed to send alert.");
+        }
+        setEmergencyLoading(false);
+    };
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Hello, {user?.name.split(' ')[0]}! 👋</h1>
-                    <p className="text-gray-500 mt-1">Here's your daily health overview.</p>
+        <div className="space-y-8 animate-fadeIn">
+            {/* Header & Profile */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-r from-teal-50 to-white p-6 rounded-3xl border border-teal-100">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-500 shadow-md">
+                        {user?.profilePic ? (
+                            <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full bg-teal-100 flex items-center justify-center text-teal-700">
+                                <User size={32} />
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Hello, {user?.name.split(' ')[0]}! 👋</h1>
+                        <p className="text-gray-500">
+                            {user?.profession ? `${user.profession} • ` : ''}
+                            {user?.age ? `${user.age} yrs` : ''}
+                        </p>
+                    </div>
                 </div>
-                <Link to="/emergency" className="bg-red-500 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-red-600 transition animate-pulse">
-                    Emergency Help
-                </Link>
+
+                <div className="flex gap-3">
+                    <Link to="/onboarding" className="bg-white text-gray-600 px-5 py-2 rounded-full font-semibold shadow-sm border border-gray-200 hover:bg-gray-50 transition flex items-center gap-2">
+                        <User size={18} /> My Profile
+                    </Link>
+                    <button
+                        onClick={handleEmergency}
+                        disabled={emergenyLoading}
+                        className="bg-red-500 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-red-600 transition animate-pulse flex items-center gap-2"
+                    >
+                        <AlertOctagon size={18} /> {emergenyLoading ? 'Sending...' : 'SOS Emergency'}
+                    </button>
+                </div>
             </div>
 
             {/* Live Heart Rate Monitor */}
@@ -101,7 +147,7 @@ const Dashboard = () => {
                             <p className="text-red-600 font-bold flex items-center gap-1">
                                 <AlertOctagon size={16} /> EMERGENCY ALERT
                             </p>
-                            <p className="text-xs text-red-400">Notifying contacts...</p>
+                            <p className="text-xs text-red-400">Notifying {user?.emergencyContact?.name || 'Emergency Services'}...</p>
                         </div>
                     )}
                 </div>
@@ -148,7 +194,6 @@ const Dashboard = () => {
             </div>
 
             {/* Action Cards */}
-            {/* Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Link to="/symptom-checker" className="col-span-1 bg-teal-600 rounded-2xl p-6 text-white shadow-lg hover:bg-teal-700 transition relative overflow-hidden group">
                     <h3 className="text-xl font-bold mb-1">Symptom Checker</h3>
@@ -157,12 +202,12 @@ const Dashboard = () => {
                     <Activity className="absolute -right-4 -bottom-4 opacity-10" size={100} />
                 </Link>
 
-                <Link to="/questionnaire" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
+                <Link to="/onboarding" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
                     <div className="bg-indigo-100 w-12 h-12 rounded-xl flex items-center justify-center text-indigo-600 mb-4">
                         <Clipboard size={24} />
                     </div>
-                    <h3 className="font-bold text-gray-800">Wellness Quiz</h3>
-                    <p className="text-gray-500 text-sm">Detailed health assessment</p>
+                    <h3 className="font-bold text-gray-800">Update Profile</h3>
+                    <p className="text-gray-500 text-sm">Refresh your details</p>
                 </Link>
 
                 <Link to="/reminders" className="col-span-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:border-teal-300 transition group">
@@ -182,19 +227,30 @@ const Dashboard = () => {
                 </Link>
             </div>
 
-            {/* Recommendations */}
+            {/* Recommendations - Personalized */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Recommended for you</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Personalized Recommendations</h3>
                 <div className="space-y-3">
                     <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
                         <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
                             <Droplets size={20} />
                         </div>
                         <div>
-                            <p className="font-semibold text-gray-800">Drink more water</p>
-                            <p className="text-sm text-gray-500 text-sm">Your average intake is lower than last week. Try to hit 2.5L today.</p>
+                            <p className="font-semibold text-gray-800">Hydration</p>
+                            <p className="text-sm text-gray-500 text-sm">Given your high activity level ({user?.questionnaireAnswers?.activity || 'Unknown'}), aim for 3L of water today.</p>
                         </div>
                     </div>
+                    {user?.questionnaireAnswers?.stress === 'High' && (
+                        <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-xl">
+                            <div className="bg-purple-100 text-purple-600 p-2 rounded-lg">
+                                <Smile size={20} />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-gray-800">Stress Relief</p>
+                                <p className="text-sm text-gray-500 text-sm">You reported high stress. Try a 5-minute breathing exercise.</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -2,13 +2,14 @@ import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const { login } = useContext(AuthContext);
+    const { login, googleLogin } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -17,8 +18,27 @@ const Login = () => {
 
         const res = await login(email, password);
         if (res.success) {
-            navigate('/dashboard');
+            // Check if user has finished onboarding
+            if (res.isOnboardingComplete) {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
         } else {
+            setError(res.message);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        const res = await googleLogin(credentialResponse);
+        if (res.success) {
+            if (res.isOnboardingComplete) {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
+        } else {
+            // If failed (likely due to mock/config), just show error
             setError(res.message);
         }
     };
@@ -34,6 +54,26 @@ const Login = () => {
                         {error}
                     </div>
                 )}
+
+                <div className="mb-6 flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError("Google Login Failed")}
+                        theme="filled_blue"
+                        shape="pill"
+                        text="signin_with"
+                        width="300"
+                    />
+                </div>
+
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
