@@ -28,9 +28,6 @@ router.post('/register', async (req, res) => {
             email,
             password,
             age,
-            email,
-            password,
-            age,
             gender,
             profession,
             emergencyContact
@@ -41,6 +38,7 @@ router.post('/register', async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                isOnboardingComplete: user.isOnboardingComplete,
                 token: generateToken(user._id),
             });
         } else {
@@ -65,6 +63,7 @@ router.post('/login', async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                isOnboardingComplete: user.isOnboardingComplete,
                 token: generateToken(user._id),
             });
         } else {
@@ -159,7 +158,7 @@ router.post('/google', async (req, res) => {
                 email,
                 password: Math.random().toString(36).slice(-8), // dummy password
                 profilePic: picture,
-                isOnboardingComplete: false
+                isOnboardingComplete: true
             });
         }
 

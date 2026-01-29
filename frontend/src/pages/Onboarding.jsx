@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { User, Activity, HeartPulse, ShieldAlert, ArrowRight, Check } from 'lucide-react';
@@ -138,6 +138,13 @@ const Onboarding = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    // Auto-redirect if already onboarded
+    useEffect(() => {
+        if (user && user.isOnboardingComplete) {
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
 
     // Form States
     const [formData, setFormData] = useState({

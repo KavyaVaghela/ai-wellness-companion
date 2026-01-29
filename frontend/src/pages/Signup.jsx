@@ -33,7 +33,7 @@ const Signup = () => {
         });
         if (res.success) {
             // New users always go to onboarding
-            navigate('/onboarding');
+            navigate('/dashboard');
         } else {
             setError(res.message);
         }
