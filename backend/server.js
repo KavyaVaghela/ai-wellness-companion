@@ -9,7 +9,18 @@ connectDB();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+
+// Explicit CORS Configuration
+app.use(cors({
+    origin: [
+        "https://ai-wellness-companion-rwzv.vercel.app", // Your Vercel Frontend
+        "http://localhost:5173", // Localhost (Vite)
+        "http://localhost:5000"  // Localhost (Backend)
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // Debug Logging Middleware
 app.use((req, res, next) => {
