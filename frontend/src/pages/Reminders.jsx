@@ -1,23 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import API_URL from '../config';
 import { Bell, Plus, Trash2, Clock } from 'lucide-react';
+import AuthContext from '../context/AuthContext';
 
 const Reminders = () => {
-    const [reminders, setReminders] = useState([
-        { id: 1, type: 'Water', label: 'Drink Water', time: '09:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
-        { id: 2, type: 'Rest', label: 'Take a break', time: '14:00', days: ['Mon', 'Fri'] }
-    ]);
+    const { user } = useContext(AuthContext);
+    const [reminders, setReminders] = useState([]);
+
+    useEffect(() => {
+        const fetchReminders = async () => {
+            try {
+                const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+                const { data } = await axios.get(`${API_URL}/api/reminders`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setReminders(data);
+            } catch (error) {
+                console.error("Error fetching reminders", error);
+            }
+        };
+        fetchReminders();
+    }, []);
     const [showForm, setShowForm] = useState(false);
     const [newReminder, setNewReminder] = useState({ type: 'Water', label: '', time: '', days: [] });
 
-    const handleDelete = (id) => {
-        setReminders(reminders.filter(r => r.id !== id));
+    const handleDelete = async (id) => {
+        try {
+            const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+            await axios.delete(`${API_URL}/api/reminders/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setReminders(reminders.filter(r => r._id !== id));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleAdd = (e) => {
+    const handleAdd = async (e) => {
         e.preventDefault();
-        setReminders([...reminders, { ...newReminder, id: Date.now(), days: ['Everyday'] }]); // Simplified days logic
-        setShowForm(false);
-        setNewReminder({ type: 'Water', label: '', time: '', days: [] });
+        try {
+            const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+
+            const { data } = await axios.post(`${API_URL}/api/reminders`, {
+                ...newReminder,
+                days: ['Everyday']
+            }, config);
+
+            setReminders([...reminders, data]);
+            setShowForm(false);
+            setNewReminder({ type: 'Water', label: '', time: '', days: [] });
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
@@ -59,7 +95,7 @@ const Reminders = () => {
 
             <div className="space-y-4">
                 {reminders.map(reminder => (
-                    <div key={reminder.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div key={reminder._id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-full ${reminder.type === 'Water' ? 'bg-blue-100 text-blue-600' : reminder.type === 'Exercise' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'}`}>
                                 <Clock size={20} />
@@ -72,7 +108,7 @@ const Reminders = () => {
                                 </p>
                             </div>
                         </div>
-                        <button onClick={() => handleDelete(reminder.id)} className="text-gray-400 hover:text-red-500 transition">
+                        <button onClick={() => handleDelete(reminder._id)} className="text-gray-400 hover:text-red-500 transition">
                             <Trash2 size={18} />
                         </button>
                     </div>

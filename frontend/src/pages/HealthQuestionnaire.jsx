@@ -32,16 +32,14 @@ const HealthQuestionnaire = () => {
         try {
             const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            // In a real app, you'd post this to the backend
-            // await axios.post(`${API_URL}/api/questionnaire`, formData, config);
 
-            // Mock success
-            setTimeout(() => {
-                alert("Health Profile Updated!");
-                navigate('/dashboard');
-            }, 1000);
+            await axios.post(`${API_URL}/api/questionnaire`, formData, config);
+
+            alert("Health Profile Updated!");
+            navigate('/dashboard');
         } catch (error) {
             console.error(error);
+            alert("Failed to submit questionnaire.");
         } finally {
             setLoading(false);
         }
