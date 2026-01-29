@@ -143,4 +143,37 @@ router.post('/emergency-alert', async (req, res) => {
     res.json({ success: true, message: 'Emergency alert processed and sent.' });
 });
 
+// @desc    Google Login/Signup
+// @route   POST /api/auth/google
+// @access  Public
+router.post('/google', async (req, res) => {
+    const { email, name, picture } = req.body;
+
+    try {
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user
+            user = await User.create({
+                name,
+                email,
+                password: Math.random().toString(36).slice(-8), // dummy password
+                profilePic: picture,
+                isOnboardingComplete: false
+            });
+        }
+
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            profilePic: user.profilePic,
+            isOnboardingComplete: user.isOnboardingComplete,
+            token: generateToken(user._id),
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
