@@ -1,13 +1,20 @@
 import { useContext, useEffect, useState } from 'react';
 import AuthContext from '../context/AuthContext';
-import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell, User, Zap, Shield, Sun } from 'lucide-react';
+import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell, User, Zap, Shield, Sun, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
-import { heartRateSimulator } from '../services/HeartRateSimulator';
+import BoatWatchCard from '../components/BoatWatchCard';
+// import { heartRateSimulator } from '../services/HeartRateSimulator';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
+    console.log("Dashboard Render. User:", user);
+
+    if (!user) {
+        return <div className="flex h-screen items-center justify-center text-xl font-bold text-gray-500">Loading your profile...</div>;
+    }
+
     const [stats, setStats] = useState({
         sleep: 0,
         water: 0,
@@ -24,14 +31,20 @@ const Dashboard = () => {
 
     // Simulator Effect
     useEffect(() => {
-        heartRateSimulator.start();
-        const unsubscribe = heartRateSimulator.subscribe((data) => {
-            setHeartRate({ bpm: data.bpm, status: data.status });
-        });
-        return () => {
-            unsubscribe();
-            heartRateSimulator.stop();
-        };
+        // heartRateSimulator.start();
+        // const unsubscribe = heartRateSimulator.subscribe((data) => {
+        //     setHeartRate({ bpm: data.bpm, status: data.status });
+        // });
+        // return () => {
+        //     unsubscribe();
+        //     heartRateSimulator.stop();
+        // };
+
+        // Simple fallback
+        const interval = setInterval(() => {
+            setHeartRate({ bpm: 72 + Math.floor(Math.random() * 5), status: 'Normal' });
+        }, 3000);
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -158,6 +171,9 @@ const Dashboard = () => {
                         </div>
                         <span className="absolute bottom-4 right-6 text-xs text-gray-300">Last updated: just now</span>
                     </div>
+
+                    {/* NEW: boAt Watch Integration Card */}
+                    <BoatWatchCard />
 
                     {/* 4. AI Health Insight */}
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">

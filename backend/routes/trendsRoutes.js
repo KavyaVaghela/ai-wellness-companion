@@ -3,6 +3,7 @@ const router = express.Router();
 const SymptomLog = require('../models/SymptomLog');
 const LifestyleLog = require('../models/LifestyleLog');
 const { protect } = require('../middleware/authMiddleware');
+const { analyzeTrends } = require('../services/aiService');
 
 // @desc    Get aggregated community trends
 // @route   GET /api/trends/stats
@@ -71,10 +72,29 @@ router.get('/stats', protect, async (req, res) => {
         alerts.push({ type: 'Medium', message: 'Heatwave advisory. Stay hydrated.', location: 'Local Region' });
 
 
+        // 4. Calculate Community Risk Level
+        let riskLevel = 'Low';
+        if (alerts.some(a => a.type === 'High')) {
+            riskLevel = 'High';
+        } else if (alerts.some(a => a.type === 'Medium') || averages.sleep < 6.5) {
+            riskLevel = 'Moderate';
+        }
+
+        // 5. Generate AI Community Summary
+        // We pass the aggregated stats to the AI
+        const aiSummary = await analyzeTrends({
+            topSymptoms: topSymptoms.map(s => s.name),
+            averages,
+            riskLevel,
+            alerts: alerts.map(a => a.message)
+        });
+
         res.json({
             symptoms: topSymptoms,
             lifestyle: { ...averages, dominantMood },
-            alerts
+            alerts,
+            riskLevel,
+            aiSummary
         });
 
     } catch (error) {

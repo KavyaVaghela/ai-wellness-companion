@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
         phone: { type: String }
     },
     healthGoals: { type: String }, // e.g., "Lose weight", "Sleep better"
+    // Smartwatch Integration
+    googleFitConnected: { type: Boolean, default: false },
+    googleFitAccessToken: { type: String },
+    googleFitRefreshToken: { type: String },
 }, { timestamps: true });
 
 // Hash password before saving

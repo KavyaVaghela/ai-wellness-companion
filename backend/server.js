@@ -33,7 +33,35 @@ app.use('/api/lifestyle', require('./routes/lifestyleRoutes'));
 app.use('/api/questionnaire', require('./routes/questionnaireRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/trends', require('./routes/trendsRoutes'));
-app.use('/api/chat', require('./routes/chatRoutes')); // New Chat Route // New Trends Route
+app.use('/api/trends', require('./routes/trendsRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes')); // New Chat Route
+app.use('/api/googlefit', require('./routes/googleFitRoutes')); // New Smartwatch Route
+
+// Cron Job: Auto-Sync Smartwatch Data every 15 minutes
+const cron = require('node-cron');
+const User = require('./models/User');
+const { fetchFitnessData } = require('./services/googleFitService');
+const SmartwatchVitals = require('./models/SmartwatchVitals');
+
+cron.schedule('*/15 * * * *', async () => {
+    console.log('Running Auto-Sync for Smartwatch Vitals...');
+    try {
+        const users = await User.find({ googleFitConnected: true });
+        for (const user of users) {
+            if (user.googleFitAccessToken) {
+                try {
+                    const data = await fetchFitnessData(user.googleFitAccessToken);
+                    await SmartwatchVitals.create({ user: user._id, ...data });
+                    console.log(`Synced for user: ${user.name}`);
+                } catch (err) {
+                    console.error(`Sync failed for ${user.name}:`, err.message);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Cron Job Error:", error);
+    }
+});
 
 app.get('/', (req, res) => {
     res.send('AI Wellness Companion API is running...');
