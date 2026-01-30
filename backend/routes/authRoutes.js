@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const generateToken = (id) => {
@@ -146,9 +149,16 @@ router.post('/emergency-alert', async (req, res) => {
 // @route   POST /api/auth/google
 // @access  Public
 router.post('/google', async (req, res) => {
-    const { email, name, picture } = req.body;
+    const { token } = req.body;
 
     try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const { name, email, picture } = ticket.getPayload();
+
         let user = await User.findOne({ email });
 
         if (!user) {
@@ -171,7 +181,8 @@ router.post('/google', async (req, res) => {
             token: generateToken(user._id),
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Google Auth Error:", error);
+        res.status(401).json({ message: 'Invalid Google Token' });
     }
 });
 

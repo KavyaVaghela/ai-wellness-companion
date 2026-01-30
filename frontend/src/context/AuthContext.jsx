@@ -69,13 +69,8 @@ export const AuthProvider = ({ children }) => {
 
     const googleLogin = async (credentialResponse) => {
         try {
-            // Decode the JWT token to get user info
-            const decoded = jwtDecode(credentialResponse.credential);
-
             const { data } = await axios.post(`${API_URL}/api/auth/google`, {
-                email: decoded.email,
-                name: decoded.name,
-                picture: decoded.picture
+                token: credentialResponse.credential
             });
 
             localStorage.setItem('userInfo', JSON.stringify(data));
