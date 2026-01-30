@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { MessageSquare, X, Send, Minimize2, Sparkles } from 'lucide-react';
+import axios from 'axios';
+import API_URL from '../config';
 
 const Chatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -7,22 +9,52 @@ const Chatbot = () => {
         { text: "Hello! I am your AI Health Assistant. How can I help you today?", isBot: true }
     ]);
     const [input, setInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false); // New state for typing indicator
 
-    const handleSend = (e) => {
+    const handleSend = async (e) => { // Make handleSend async
         e.preventDefault();
         if (!input.trim()) return;
 
         const userMsg = { text: input, isBot: false };
-        setMessages(prev => [...prev, userMsg]);
-        setInput('');
+        // Add user message
+        const newMessages = [...messages, userMsg];
+        setMessages(newMessages);
+        setInput(''); // Clear input immediately
+        setIsOpen(true); // Ensure chatbot is open
+        setIsTyping(true); // Show typing indicator
 
-        // Mock AI Response
-        setTimeout(() => {
-            let botText = "I see. It's important to stay hydrated and rest. Would you like to check your symptoms in detail?";
-            if (input.toLowerCase().includes('headache')) botText = "Headaches can be caused by dehydration or stress. Try drinking water.";
+        try {
+            const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
 
-            setMessages(prev => [...prev, { text: botText, isBot: true }]);
-        }, 1000);
+            // Prepare history for context, mapping to 'role' and 'parts' for the API
+            const history = newMessages.slice(-6).map(m => ({
+                role: m.isBot ? 'model' : 'user', // Map isBot to 'model' or 'user'
+                parts: [{ text: m.text }]
+            }));
+
+            const { data } = await axios.post(`${API_URL}/api/chat`, {
+                message: userMsg.text, // Send the user's message text
+                history
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const botMessage = {
+                text: data.reply, // Assuming API returns { reply: "..." }
+                isBot: true
+            };
+            setMessages(prev => [...prev, botMessage]);
+
+        } catch (error) {
+            console.error("Chat Error:", error);
+            const errorMessage = {
+                text: "I'm having trouble connecting to the server. Please try again.",
+                isBot: true
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsTyping(false); // Hide typing indicator
+        }
     };
 
     return (
@@ -54,8 +86,8 @@ const Chatbot = () => {
                     {/* Chat Area */}
                     <div className="flex-1 p-4 overflow-y-auto h-80 bg-gray-50 flex flex-col gap-3">
                         {messages.map((msg, idx) => (
-                            <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.isBot ? 'bg-white border border-gray-200 text-gray-700 rounded-tl-none' : 'bg-teal-600 text-white rounded-tr-none'}`}>
+                            <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'} `}>
+                                <div className={`max - w - [80 %] p - 3 rounded - 2xl text - sm ${msg.isBot ? 'bg-white border border-gray-200 text-gray-700 rounded-tl-none' : 'bg-teal-600 text-white rounded-tr-none'} `}>
                                     {msg.text}
                                 </div>
                             </div>

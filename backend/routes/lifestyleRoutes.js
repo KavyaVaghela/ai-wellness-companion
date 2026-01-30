@@ -36,4 +36,28 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
+const { getDashboardInsight } = require('../services/aiService');
+
+// @desc    Get AI Dashboard Insight
+// @route   GET /api/lifestyle/insight
+// @access  Private
+router.get('/insight', protect, async (req, res) => {
+    try {
+        // Fetch latest stats for the user
+        const logs = await LifestyleLog.find({ user: req.user._id }).sort({ date: -1 }).limit(1);
+        const latest = logs[0] || {};
+
+        const insight = await getDashboardInsight({
+            sleep: latest.sleepHours,
+            water: latest.waterIntake,
+            steps: latest.steps,
+            mood: latest.mood
+        });
+
+        res.json({ insight });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to generate insight' });
+    }
+});
+
 module.exports = router;

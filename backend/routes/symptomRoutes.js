@@ -47,6 +47,8 @@ router.get('/trends', protect, async (req, res) => {
     }
 });
 
+const { analyzeSymptoms } = require('../services/aiService');
+
 // @desc    Log symptoms and get AI advice
 // @route   POST /api/symptoms
 // @access  Private
@@ -54,7 +56,8 @@ router.post('/', protect, async (req, res) => {
     const { symptoms, severity } = req.body; // symptoms is array of strings
 
     try {
-        const advice = getAIAdvice(symptoms);
+        // Use Real AI
+        const advice = await analyzeSymptoms(symptoms);
 
         const log = await SymptomLog.create({
             user: req.user._id,
