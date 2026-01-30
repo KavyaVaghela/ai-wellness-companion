@@ -101,7 +101,9 @@ router.put('/profile', async (req, res) => {
         const user = await User.findById(_id);
 
         if (user) {
-            user.age = updateData.age || user.age;
+            user.birthdate = updateData.birthdate || user.birthdate; // New
+            user.mobile = updateData.mobile || user.mobile; // New
+            user.age = updateData.age || user.age; // Keep age if passed, or calculate later
             user.gender = updateData.gender || user.gender;
             user.profession = updateData.profession || user.profession;
             user.profilePic = updateData.profilePic || user.profilePic;
@@ -109,7 +111,12 @@ router.put('/profile', async (req, res) => {
             user.questionnaireAnswers = updateData.questionnaireAnswers || user.questionnaireAnswers;
 
             if (updateData.emergencyContact) {
-                user.emergencyContact = updateData.emergencyContact;
+                user.emergencyContact = {
+                    name: updateData.emergencyContact.name || user.emergencyContact.name,
+                    phone: updateData.emergencyContact.phone || user.emergencyContact.phone,
+                    relationship: updateData.emergencyContact.relationship || user.emergencyContact.relationship,
+                    email: updateData.emergencyContact.email || user.emergencyContact.email // New
+                };
             }
 
             const updatedUser = await user.save();

@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    age: { type: Number },
+    birthdate: { type: Date }, // New: for age calculation
+    mobile: { type: String }, // New: User mobile number
     gender: { type: String },
     profession: { type: String },
     profilePic: { type: String, default: "" },
@@ -13,7 +14,7 @@ const userSchema = new mongoose.Schema({
     questionnaireAnswers: { type: Object, default: {} },
     emergencyContact: {
         name: { type: String },
-        email: { type: String },
+        email: { type: String }, // New: Emergency contact email
         relationship: { type: String },
         phone: { type: String }
     },

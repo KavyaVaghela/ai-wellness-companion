@@ -29,8 +29,27 @@ const Step1Profile = ({ formData, handleInputChange, handleFileChange, nextStep 
 
         <div className="grid grid-cols-2 gap-4">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                <input name="age" type="number" value={formData.age} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="25" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Birthdate</label>
+                <input
+                    name="birthdate"
+                    type="date"
+                    value={formData.birthdate ? new Date(formData.birthdate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                        const date = e.target.value;
+                        const age = new Date().getFullYear() - new Date(date).getFullYear();
+                        handleInputChange({ target: { name: 'birthdate', value: date } });
+                        handleInputChange({ target: { name: 'age', value: age } });
+                    }}
+                    className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile No</label>
+                <input name="mobile" type="tel" value={formData.mobile} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="+91 98765..." />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Age (Auto)</label>
+                <input name="age" type="number" value={formData.age} readOnly className="w-full p-3 border rounded-xl bg-gray-100 text-gray-500" />
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
@@ -57,6 +76,8 @@ const Step2Questions = ({ questionnaire, handleQuestionSelect, nextStep, prevSte
     const options = {
         sleep: ['< 5 hours', '5-7 hours', '7-9 hours', '> 9 hours'],
         stress: ['Low', 'Moderate', 'High', 'Extreme'],
+        mood: ['Happy', 'Calm', 'Anxious', 'Sad'], // New Emotional
+        energy: ['Low', 'Medium', 'High', 'Fluctuating'], // New Physical
         activity: ['Sedentary', 'Lightly Active', 'Active', 'Very Active'],
         diet: ['Fast Food', 'Balanced', 'Vegetarian', 'Strict Plan']
     };
@@ -115,6 +136,10 @@ const Step3Emergency = ({ formData, handleInputChange, handleSubmit, loading, pr
                 <input name="emergencyPhone" type="tel" value={formData.emergencyPhone} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="+1 234..." />
             </div>
             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email ID</label>
+                <input name="emergencyEmail" type="email" value={formData.emergencyEmail} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="mom@example.com" />
+            </div>
+            <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
                 <input name="emergencyRelation" type="text" value={formData.emergencyRelation} onChange={handleInputChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-teal-500" placeholder="Mother" />
             </div>
@@ -149,12 +174,15 @@ const Onboarding = () => {
     // Form States
     const [formData, setFormData] = useState({
         age: user?.age || '',
+        birthdate: user?.birthdate || '', // New
+        mobile: user?.mobile || '', // New
         gender: user?.gender || 'Male',
         profession: user?.profession || '',
         profilePic: '',
         bio: '',
         emergencyName: user?.emergencyContact?.name || '',
         emergencyPhone: user?.emergencyContact?.phone || '',
+        emergencyEmail: user?.emergencyContact?.email || '', // New
         emergencyRelation: user?.emergencyContact?.relationship || ''
     });
 
@@ -199,6 +227,7 @@ const Onboarding = () => {
             emergencyContact: {
                 name: formData.emergencyName,
                 phone: formData.emergencyPhone,
+                email: formData.emergencyEmail, // New
                 relationship: formData.emergencyRelation
             },
             questionnaireAnswers: questionnaire,
