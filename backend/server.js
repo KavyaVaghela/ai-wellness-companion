@@ -12,16 +12,11 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Explicit CORS Configuration
+// Explicit CORS Configuration
 app.use(cors({
-    origin: [
-        "https://ai-wellness-companion.vercel.app", // Main Domain
-        "https://ai-wellness-companion-rwzv.vercel.app", // Previous Domain
-        "http://localhost:5173", // Localhost (Vite)
-        "http://localhost:5000", // Localhost (Backend)
-        /\.vercel\.app$/ // Allow all Vercel subdomains (for preview deployments)
-    ],
+    origin: "*", // Allow all origins for now to fix deployment issues
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
