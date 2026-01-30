@@ -101,7 +101,14 @@ const Dashboard = () => {
                         <p className="text-gray-500">
                             {user?.profession ? `${user.profession} • ` : ''}
                             {user?.age ? `${user.age} yrs` : ''}
+                            {user?.mobile ? ` • ${user.mobile}` : ''}
                         </p>
+                        {user?.emergencyContact && (
+                            <p className="text-xs text-red-500 font-medium mt-1 flex items-center gap-1">
+                                <AlertOctagon size={12} />
+                                Emergency: {user.emergencyContact.name} ({user.emergencyContact.phone})
+                            </p>
+                        )}
                     </div>
                 </div>
 

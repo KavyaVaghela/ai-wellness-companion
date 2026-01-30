@@ -32,6 +32,7 @@ app.use('/api/symptoms', require('./routes/symptomRoutes'));
 app.use('/api/lifestyle', require('./routes/lifestyleRoutes'));
 app.use('/api/questionnaire', require('./routes/questionnaireRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
+app.use('/api/trends', require('./routes/trendsRoutes')); // New Trends Route
 
 app.get('/', (req, res) => {
     res.send('AI Wellness Companion API is running...');
