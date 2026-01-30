@@ -22,6 +22,11 @@ const Navbar = () => {
     // User requested: "remove it from there and add only after login/sign up"
     // Meaning: on login/signup pages, don't show the main app links. 
 
+    // If on public page, hide the navbar completely as requested
+    if (isPublicPage) {
+        return null; // Or return just a simple Logo header if desired, but user said "remove"
+    }
+
     return (
         <nav className="bg-white shadow-md">
             <div className="container mx-auto px-4">
