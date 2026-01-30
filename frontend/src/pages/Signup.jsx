@@ -33,7 +33,7 @@ const Signup = () => {
         });
         if (res.success) {
             // New users always go to onboarding
-            navigate('/dashboard');
+            navigate('/onboarding');
         } else {
             setError(res.message);
         }
@@ -42,7 +42,11 @@ const Signup = () => {
     const handleGoogleSuccess = async (credentialResponse) => {
         const res = await googleLogin(credentialResponse);
         if (res.success) {
-            navigate('/onboarding');
+            if (res.isOnboardingComplete) {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
         } else {
             setError(res.message);
         }

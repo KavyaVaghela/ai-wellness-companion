@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     gender: { type: String },
     profession: { type: String },
     profilePic: { type: String, default: "" },
-    isOnboardingComplete: { type: Boolean, default: true },
+    isOnboardingComplete: { type: Boolean, default: false }, // Default to false so they go through onboarding
     questionnaireAnswers: { type: Object, default: {} },
     emergencyContact: {
         name: { type: String },

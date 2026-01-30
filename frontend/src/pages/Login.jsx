@@ -19,7 +19,11 @@ const Login = () => {
         const res = await login(email, password);
         if (res.success) {
             // Check if user has finished onboarding
-            navigate('/dashboard');
+            if (res.isOnboardingComplete) {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
         } else {
             setError(res.message);
         }
@@ -28,7 +32,11 @@ const Login = () => {
     const handleGoogleSuccess = async (credentialResponse) => {
         const res = await googleLogin(credentialResponse);
         if (res.success) {
-            navigate('/dashboard');
+            if (res.isOnboardingComplete) {
+                navigate('/dashboard');
+            } else {
+                navigate('/onboarding');
+            }
         } else {
             // If failed (likely due to mock/config), just show error
             setError(res.message);

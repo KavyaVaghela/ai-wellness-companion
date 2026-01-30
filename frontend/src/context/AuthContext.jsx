@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post(`${API_URL}/api/auth/register`, userData);
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
-            return { success: true };
+            return { success: true, isOnboardingComplete: data.isOnboardingComplete };
         } catch (error) {
             console.error("Register Debug Error:", error);
             return {
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
 
             localStorage.setItem('userInfo', JSON.stringify(data));
             setUser(data);
-            return { success: true };
+            return { success: true, isOnboardingComplete: data.isOnboardingComplete };
         } catch (error) {
             console.error("Google Login Error:", error);
             return {

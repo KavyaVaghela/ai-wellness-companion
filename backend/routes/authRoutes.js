@@ -175,7 +175,7 @@ router.post('/google', async (req, res) => {
                 email,
                 password: Math.random().toString(36).slice(-8), // dummy password
                 profilePic: picture,
-                isOnboardingComplete: true
+                isOnboardingComplete: false // Force false for new users
             });
         }
 
