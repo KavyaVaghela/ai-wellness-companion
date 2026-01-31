@@ -1,4 +1,10 @@
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
+// Fallback to Render URL in production if env var is missing or localhost
+let envUrl = import.meta.env.VITE_API_URL;
+if (import.meta.env.PROD && (!envUrl || envUrl.includes('localhost'))) {
+    envUrl = 'https://ai-wellness-companion-1-7wie.onrender.com';
+}
+
+const API_URL = (envUrl || 'http://localhost:5000').replace(/\/$/, '');
 
 console.log("Current API_URL:", API_URL);
 if (import.meta.env.PROD && API_URL.includes("localhost")) {

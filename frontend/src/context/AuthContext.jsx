@@ -23,7 +23,15 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post(`${API_URL}/api/auth/login`, {
                 email,
                 password,
+                password,
             });
+
+            // Validate response
+            if (typeof data === 'string' || !data.token) {
+                console.error("Invalid Login Response (likely HTML):", data);
+                throw new Error("Invalid Server Response. Check API URL.");
+            }
+
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             return { success: true, isOnboardingComplete: data.isOnboardingComplete };
@@ -75,6 +83,13 @@ export const AuthProvider = ({ children }) => {
 
 
             console.log("Google Login/Signup Success:", data);
+
+            // Validate response
+            if (typeof data === 'string' || !data.token) {
+                console.error("Invalid Google Login Response (likely HTML):", data);
+                throw new Error("Invalid Server Response. Check API URL.");
+            }
+
             localStorage.setItem('userInfo', JSON.stringify(data));
             setUser(data);
             return { success: true, isOnboardingComplete: data.isOnboardingComplete };
