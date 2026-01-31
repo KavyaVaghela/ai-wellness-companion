@@ -20,6 +20,7 @@ const Signup = () => {
     // then Onboarding handles the rest. This matches "modern" flow better.
 
     const [error, setError] = useState('');
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const { register, googleLogin } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -40,15 +41,24 @@ const Signup = () => {
     };
 
     const handleGoogleSuccess = async (credentialResponse) => {
-        const res = await googleLogin(credentialResponse);
-        if (res.success) {
-            if (res.isOnboardingComplete) {
-                navigate('/dashboard');
+        setIsGoogleLoading(true);
+        setError('');
+        try {
+            const res = await googleLogin(credentialResponse);
+            if (res.success) {
+                if (res.isOnboardingComplete) {
+                    navigate('/dashboard');
+                } else {
+                    navigate('/onboarding');
+                }
             } else {
-                navigate('/onboarding');
+                setError(res.message);
             }
-        } else {
-            setError(res.message);
+        } catch (err) {
+            setError("Unexpected error during Google Signup");
+            console.error(err);
+        } finally {
+            setIsGoogleLoading(false);
         }
     };
 
@@ -64,15 +74,22 @@ const Signup = () => {
                     </div>
                 )}
 
-                <div className="mb-6 flex justify-center">
-                    <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => setError("Google Login Failed")}
-                        theme="filled_blue"
-                        shape="pill"
-                        text="signup_with"
-                        width="300"
-                    />
+                <div className="mb-6 flex flex-col items-center justify-center">
+                    {isGoogleLoading ? (
+                        <div className="flex items-center gap-2 text-teal-600 font-medium mb-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600"></div>
+                            Signing up with Google...
+                        </div>
+                    ) : (
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setError("Google Login Failed")}
+                            theme="filled_blue"
+                            shape="pill"
+                            text="signup_with"
+                            width="300"
+                        />
+                    )}
                 </div>
 
                 <div className="relative mb-6">

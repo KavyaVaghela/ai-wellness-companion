@@ -73,14 +73,26 @@ export const AuthProvider = ({ children }) => {
                 token: credentialResponse.credential
             });
 
+
+            console.log("Google Login/Signup Success:", data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             setUser(data);
             return { success: true, isOnboardingComplete: data.isOnboardingComplete };
         } catch (error) {
-            console.error("Google Login Error:", error);
+            console.error("Google Login Error Detailed:", error);
+
+            let errorMessage = 'Google Login failed';
+
+            if (error.code === "ERR_NETWORK") {
+                errorMessage = `Network Error: Unable to connect to server at ${API_URL}. Check your internet connection or if the server is down (CORS issue?).`;
+            } else if (error.response) {
+                // Server responded with a status code that falls out of the range of 2xx
+                errorMessage = error.response.data?.message || `Server Error: ${error.response.status}`;
+            }
+
             return {
                 success: false,
-                message: error.response?.data?.message || 'Google Login failed'
+                message: errorMessage
             };
         }
     };

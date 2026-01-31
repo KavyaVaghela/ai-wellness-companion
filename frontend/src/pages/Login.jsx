@@ -8,6 +8,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const { login, googleLogin } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -27,16 +28,24 @@ const Login = () => {
     };
 
     const handleGoogleSuccess = async (credentialResponse) => {
-        const res = await googleLogin(credentialResponse);
-        if (res.success) {
-            if (res.isOnboardingComplete) {
-                navigate('/dashboard');
+        setIsGoogleLoading(true);
+        setError('');
+        try {
+            const res = await googleLogin(credentialResponse);
+            if (res.success) {
+                if (res.isOnboardingComplete) {
+                    navigate('/dashboard');
+                } else {
+                    navigate('/onboarding');
+                }
             } else {
-                navigate('/onboarding');
+                setError(res.message);
             }
-        } else {
-            // If failed (likely due to mock/config), just show error
-            setError(res.message);
+        } catch (err) {
+            setError("Unexpected error during Google Login");
+            console.error(err);
+        } finally {
+            setIsGoogleLoading(false);
         }
     };
 
@@ -52,15 +61,22 @@ const Login = () => {
                     </div>
                 )}
 
-                <div className="mb-6 flex justify-center">
-                    <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => setError("Google Login Failed")}
-                        theme="filled_blue"
-                        shape="pill"
-                        text="signin_with"
-                        width="300"
-                    />
+                <div className="mb-6 flex flex-col items-center justify-center">
+                    {isGoogleLoading ? (
+                        <div className="flex items-center gap-2 text-teal-600 font-medium mb-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600"></div>
+                            Logging in with Google...
+                        </div>
+                    ) : (
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setError("Google Login Failed")}
+                            theme="filled_blue"
+                            shape="pill"
+                            text="signin_with"
+                            width="300"
+                        />
+                    )}
                 </div>
 
                 <div className="relative mb-6">
