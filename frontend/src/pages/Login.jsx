@@ -33,7 +33,13 @@ const Login = () => {
         try {
             const res = await googleLogin(credentialResponse);
             if (res.success) {
-                if (res.isOnboardingComplete) {
+                // If the flag is strictly true, go to dashboard. 
+                // If it is false, go to onboarding.
+                // If it is undefined/null, assume dashboard to be safe (or check logic).
+                // But for now, let's log it.
+                console.log("Login Success. Onboarding Status:", res.isOnboardingComplete);
+
+                if (res.isOnboardingComplete === true) {
                     navigate('/dashboard');
                 } else {
                     navigate('/onboarding');

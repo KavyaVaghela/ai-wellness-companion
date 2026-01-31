@@ -46,7 +46,8 @@ const Signup = () => {
         try {
             const res = await googleLogin(credentialResponse);
             if (res.success) {
-                if (res.isOnboardingComplete) {
+                console.log("Google Signup Success. Onboarding Status:", res.isOnboardingComplete);
+                if (res.isOnboardingComplete === true) {
                     navigate('/dashboard');
                 } else {
                     navigate('/onboarding');
