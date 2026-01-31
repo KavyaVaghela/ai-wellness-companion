@@ -26,17 +26,20 @@ const getChatResponse = async (history, message) => {
     }
 };
 
-const analyzeSymptoms = async (symptoms) => {
+const analyzeSymptoms = async (symptoms, severity = 'Unknown', duration = 'Unknown') => {
     try {
         const prompt = `
         Act as a preliminary medical wellness assistant. The user is reporting the following symptoms: ${symptoms.join(', ')}.
+        Severity: ${severity}
+        Duration: ${duration}
+        
         Provide a concise, empathetic response including:
         1. Potential causes (mentioning common benign issues first).
         2. Suggested home remedies or lifestyle adjustments.
         3. Clear guidance on when to see a doctor (red flags).
         
         IMPORTANT: Start with a disclaimer that you are an AI and this is not professional medical advice.
-        Keep the tone calm and helpful.
+        Keep the tone calm, helpful, and reassuring.
         `;
 
         const result = await model.generateContent(prompt);

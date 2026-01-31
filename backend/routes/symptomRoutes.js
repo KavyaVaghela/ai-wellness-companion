@@ -47,26 +47,45 @@ router.get('/trends', protect, async (req, res) => {
     }
 });
 
+const { getRuleBasedAnalysis } = require('../services/symptomRules');
 const { analyzeSymptoms } = require('../services/aiService');
 
-// @desc    Log symptoms and get AI advice
+// @desc    Log symptoms and get Hybrid advice (Rules + AI)
 // @route   POST /api/symptoms
 // @access  Private
 router.post('/', protect, async (req, res) => {
-    const { symptoms, severity } = req.body; // symptoms is array of strings
+    const { symptoms, severity, duration } = req.body; // symptoms is array of strings
 
     try {
-        // Use Real AI
-        const advice = await analyzeSymptoms(symptoms);
+        // 1. Get Rule-Based Analysis (Guaranteed)
+        const ruleBasedResult = getRuleBasedAnalysis(symptoms);
+
+        // 2. Try to get AI Summary (Enhancement)
+        let aiSummary = ruleBasedResult.aiAdvice; // Default fallback
+        try {
+            const aiResponse = await analyzeSymptoms(symptoms, severity, duration);
+            if (aiResponse) aiSummary = aiResponse;
+        } catch (aiError) {
+            console.error("AI Enhancement Failed (Fallback to Rules):", aiError.message);
+        }
 
         const log = await SymptomLog.create({
             user: req.user._id,
             symptoms,
             severity,
-            aiAdvice: advice,
+            duration,
+            aiAdvice: aiSummary, // Storing main advice
         });
 
-        res.status(201).json(log);
+        // Return Hybrid Response
+        // We return the structured rule data + the AI summary
+        res.status(201).json({
+            ...log.toObject(),
+            ...ruleBasedResult, // Adds possibleCauses, homeRemedies, whenToSeeDoctor
+            aiAdvice: aiSummary // Ensure fresh AI advice is used
+        });
+
+
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

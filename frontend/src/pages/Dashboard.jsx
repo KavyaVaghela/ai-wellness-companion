@@ -1,15 +1,14 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import AuthContext from '../context/AuthContext';
-import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell, User, Zap, Shield, Sun, Sparkles } from 'lucide-react';
+import { Activity, Moon, Droplets, Smile, ArrowRight, Heart, AlertOctagon, Clipboard, Bell, User, Zap, Shield, Sun, Sparkles, X, PhoneCall } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
 import BoatWatchCard from '../components/BoatWatchCard';
-// import { heartRateSimulator } from '../services/HeartRateSimulator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Dashboard = () => {
     const { user } = useContext(AuthContext);
-    console.log("Dashboard Render. User:", user);
 
     if (!user) {
         return <div className="flex h-screen items-center justify-center text-xl font-bold text-gray-500">Loading your profile...</div>;
@@ -26,21 +25,16 @@ const Dashboard = () => {
     const [emergencyLoading, setEmergencyLoading] = useState(false);
     const [comfortMode, setComfortMode] = useState(false);
 
+    // SOS Modal State
+    const [showSOSModal, setShowSOSModal] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+    const timerRef = useRef(null);
+
     // Heart Rate State
     const [heartRate, setHeartRate] = useState({ bpm: '--', status: 'Normal' });
 
     // Simulator Effect
     useEffect(() => {
-        // heartRateSimulator.start();
-        // const unsubscribe = heartRateSimulator.subscribe((data) => {
-        //     setHeartRate({ bpm: data.bpm, status: data.status });
-        // });
-        // return () => {
-        //     unsubscribe();
-        //     heartRateSimulator.stop();
-        // };
-
-        // Simple fallback
         const interval = setInterval(() => {
             setHeartRate({ bpm: 72 + Math.floor(Math.random() * 5), status: 'Normal' });
         }, 3000);
@@ -72,10 +66,10 @@ const Dashboard = () => {
                 const { data: insightData } = await axios.get(`${API_URL}/api/lifestyle/insight`, config);
                 if (insightData.insight) setInsight(insightData.insight);
 
-                // 3. Fetch Reminders (Mock logic for "Next Reminder" if API doesn't support filtering yet)
+                // 3. Fetch Reminders 
                 const { data: remindersData } = await axios.get(`${API_URL}/api/reminders`, config);
                 if (remindersData.length > 0) {
-                    setNextReminder(remindersData[0]); // Assuming sorted by time
+                    setNextReminder(remindersData[0]);
                 }
 
             } catch (error) {
@@ -85,20 +79,72 @@ const Dashboard = () => {
         fetchData();
     }, []);
 
-    const handleEmergency = async () => {
-        if (!window.confirm("Are you sure you want to trigger an EMERGENCY ALERT?")) return;
+    /* --- SOS LOGIC START --- */
+    const handleSOSClick = () => {
+        setShowSOSModal(true);
+        setCountdown(5);
+    };
+
+    const cancelSOS = () => {
+        setShowSOSModal(false);
+        setCountdown(5);
+        if (timerRef.current) clearInterval(timerRef.current);
+    };
+
+    const confirmSOS = async () => {
+        if (timerRef.current) clearInterval(timerRef.current);
         setEmergencyLoading(true);
+
+        // Get Location
+        if (!navigator.geolocation) {
+            sendSOSRequest({ lat: 0, lng: 0 }); // Fallback
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                sendSOSRequest({ lat: latitude, lng: longitude });
+            },
+            (error) => {
+                console.error("Location Error:", error);
+                sendSOSRequest({ lat: 0, lng: 0 }); // Send anyway without precise location
+            }
+        );
+    };
+
+    const sendSOSRequest = async (location) => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.post(`${API_URL}/api/auth/emergency-alert`, {
-                userId: user._id, type: "SOS_BUTTON", location: { lat: 0, lng: 0 }
+            const { data } = await axios.post(`${API_URL}/api/auth/emergency-alert`, {
+                userId: user._id,
+                type: "SOS_BUTTON",
+                location
             }, { headers: { Authorization: `Bearer ${userInfo?.token}` } });
-            alert("Emergency Alert Sent! Help is on the way.");
+
+            alert(`🚨 ${data.message}`); // Replace with nicer UI feedback in future
+            setShowSOSModal(false);
         } catch (error) {
-            alert("Failed to send alert.");
+            console.error(error);
+            alert("Failed to send alert. Please call emergency services directly.");
         }
         setEmergencyLoading(false);
     };
+
+    // Countdown Effect
+    useEffect(() => {
+        if (showSOSModal && countdown > 0) {
+            timerRef.current = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+        } else if (countdown === 0 && showSOSModal) {
+            // Auto-trigger if countdown ends? Or just stay at 0 waiting for confirm?
+            // Usually SOS apps auto-trigger at 0. Let's auto-trigger.
+            confirmSOS();
+        }
+        return () => clearInterval(timerRef.current);
+    }, [showSOSModal, countdown]);
+    /* --- SOS LOGIC END --- */
 
     const getStatusColor = (val, type) => {
         if (type === 'sleep') return val < 6 ? 'text-red-500' : 'text-gray-800';
@@ -117,7 +163,7 @@ const Dashboard = () => {
     const cardTheme = comfortMode ? 'bg-[#eaf4ea] border-none shadow-sm' : 'bg-white shadow-sm border border-gray-100';
 
     return (
-        <div className={`space-y-6 transition-colors duration-500 animate-fadeIn ${bgTheme} min-h-screen p-4 rounded-3xl`}>
+        <div className={`space-y-6 transition-colors duration-500 animate-fadeIn ${bgTheme} min-h-screen p-4 rounded-3xl relative`}>
 
             {/* 1. Greeting & Context */}
             <div className="flex justify-between items-end">
@@ -268,12 +314,62 @@ const Dashboard = () => {
                     </div>
 
                     {/* 10. Emergency Button (Compact) */}
-                    <button onClick={handleEmergency} className="w-full bg-red-50 text-red-600 py-3 rounded-2xl text-sm font-bold hover:bg-red-100 transition flex items-center justify-center gap-2">
-                        <AlertOctagon size={16} /> Trigger SOS
-                    </button>
+                    <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleSOSClick}
+                        className="w-full bg-red-50 text-red-600 py-4 rounded-2xl text-base font-bold hover:bg-red-100 transition flex items-center justify-center gap-2 border-2 border-red-100"
+                    >
+                        <AlertOctagon size={20} /> Trigger SOS
+                    </motion.button>
 
                 </div>
             </div>
+
+            {/* ERROR / SOS MODAL */}
+            <AnimatePresence>
+                {showSOSModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden"
+                        >
+                            <div className="absolute inset-x-0 top-0 h-2 bg-red-500 animate-progress" style={{ width: `${(countdown / 5) * 100}%`, transition: 'width 1s linear' }}></div>
+
+                            <button onClick={cancelSOS} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                                <X size={24} />
+                            </button>
+
+                            <div className="mx-auto w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                <AlertOctagon size={40} />
+                            </div>
+
+                            <h2 className="text-2xl font-black text-gray-900 mb-2">SOS ALERT</h2>
+                            <p className="text-gray-500 mb-6">
+                                Sending emergency alert to your contacts and sharing your live location in <span className="font-bold text-red-600 text-xl">{countdown}s</span>...
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={confirmSOS}
+                                    disabled={emergencyLoading}
+                                    className="w-full bg-red-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-red-700 shadow-xl shadow-red-200 transition flex items-center justify-center gap-2"
+                                >
+                                    {emergencyLoading ? 'Sending Alert...' : 'SEND NOW'}
+                                </button>
+                                <button
+                                    onClick={cancelSOS}
+                                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

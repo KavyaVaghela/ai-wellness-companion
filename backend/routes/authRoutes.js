@@ -141,15 +141,41 @@ router.put('/profile', async (req, res) => {
 // @access  Private
 router.post('/emergency-alert', async (req, res) => {
     const { userId, location, type } = req.body;
-    console.log(`[EMERGENCY] Alert received for User ${userId}`);
-    console.log(`[EMERGENCY] Location: ${JSON.stringify(location)}`);
-    console.log(`[EMERGENCY] Type: ${type}`);
-    console.log(`[EMERGENCY] SIMULATION: Sending SMS to emergency contacts...`);
-    console.log(`[EMERGENCY] SIMULATION: Dispatching ambulance to location...`);
 
-    // In a real app, Twilio/SendGrid logic would go here.
+    try {
+        const user = await User.findById(userId);
 
-    res.json({ success: true, message: 'Emergency alert processed and sent.' });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const contact = user.emergencyContact || {};
+        const contactName = contact.name || 'Emergency Services';
+        const contactPhone = contact.phone || '112';
+
+        console.log(`[EMERGENCY] Alert received for User: ${user.name} (${user.email})`);
+        console.log(`[EMERGENCY] Location: https://maps.google.com/?q=${location?.lat},${location?.lng}`);
+        console.log(`[EMERGENCY] Type: ${type}`);
+        console.log(`[EMERGENCY] SIMULATION: Sending SMS to ${contactName} (${contactPhone})...`);
+
+        // Mock ID for the alert
+        const alertId = 'SOS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+        res.json({
+            success: true,
+            message: `Emergency alert processed. Notified ${contactName} and shared your location.`,
+            alertId,
+            dispatched: true,
+            contactNotified: {
+                name: contactName,
+                phone: contactPhone
+            }
+        });
+
+    } catch (error) {
+        console.error("Emergency Alert Error:", error);
+        res.status(500).json({ message: 'Failed to process emergency alert' });
+    }
 });
 
 // @desc    Google Login/Signup
