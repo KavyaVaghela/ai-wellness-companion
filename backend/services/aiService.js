@@ -1,28 +1,43 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+    console.warn("⚠️ GEMINI_API_KEY is missing in environment variables.");
+} else {
+    console.log(`✅ Gemini API Initialized (Key starts with: ${apiKey.substring(0, 4)}...)`);
+}
 
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const genAI = new GoogleGenerativeAI(apiKey);
+
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const getChatResponse = async (history, message) => {
     try {
-        // Construct prompt with history context
-        // history is expected to be an array of { role: 'user' | 'model', parts: [{ text: string }] }
-        // specific to Gemini format, or we can adapt from simple format
+        console.log("------- GEMINI REQUEST -------");
+        console.log("Message:", message);
+
+        // Sanitize History for Gemini
+        let formattedHistory = (history || []).map(msg => ({
+            role: (msg.role === 'assistant' || msg.role === 'model') ? 'model' : 'user',
+            parts: [{ text: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || "") }]
+        })).filter(msg => msg.parts[0].text);
+
+        // Gemini history MUST start with a user message.
+        // If the first message is from the model, remove it.
+        while (formattedHistory.length > 0 && formattedHistory[0].role === 'model') {
+            formattedHistory.shift();
+        }
 
         const chat = model.startChat({
-            history: history || [],
-            generationConfig: {
-                maxOutputTokens: 500,
-            },
+            history: formattedHistory,
         });
 
         const result = await chat.sendMessage(message);
         const response = await result.response;
         return response.text();
     } catch (error) {
-        console.error("Gemini Chat Error:", error);
-        return "I'm having trouble connecting to my AI brain right now. Please try again later.";
+        console.error("Gemini Chat Error Details:", error);
+        return "I'm experiencing a temporary connection issue. (" + error.message + ")";
     }
 };
 
