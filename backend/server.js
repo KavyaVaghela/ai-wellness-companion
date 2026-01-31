@@ -14,7 +14,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Explicit CORS Configuration
 // Explicit CORS Configuration
 app.use(cors({
-    origin: "*", // Allow all origins for now to fix deployment issues
+    // origin: "*", // Wildcard with credentials is not allowed by browsers
+    origin: ["http://localhost:5173", "http://localhost:5000"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
