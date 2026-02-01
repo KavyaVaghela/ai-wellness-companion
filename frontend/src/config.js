@@ -1,15 +1,19 @@
-// Fallback to Render URL in production if env var is missing or localhost
-let envUrl = import.meta.env.VITE_API_URL;
-if (import.meta.env.PROD && (!envUrl || envUrl.includes('localhost'))) {
-    envUrl = 'https://ai-wellness-companion-wg4w.onrender.com';
+// In production (Vercel), the backend is served at /api
+// This allows it to work dynamically on any Vercel domain
+let apiUrl = import.meta.env.VITE_API_URL;
+
+if (import.meta.env.PROD) {
+    // If no explicit env var, or if it was localhost, use relative path
+    if (!apiUrl || apiUrl.includes('localhost')) {
+        apiUrl = '/api';
+    }
+} else {
+    // Local development fallback
+    apiUrl = apiUrl || 'http://localhost:5000';
 }
 
-const API_URL = (envUrl || 'http://localhost:5000').replace(/\/$/, '');
+const API_URL = apiUrl.replace(/\/$/, '');
 
 console.log("Current API_URL:", API_URL);
-if (import.meta.env.PROD && API_URL.includes("localhost")) {
-    console.warn("WARNING: Production build is using localhost API URL. Check your .env files!");
-}
-
 
 export default API_URL;
